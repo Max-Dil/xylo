@@ -1,0 +1,40 @@
+function encrypt(text: string, key: string): string
+    local bytes = string.toBytes(text)
+    local keyBytes = string.toBytes(key)
+    local keyLength = len(keyBytes)
+    for i, byte in ipairs(keyBytes) do
+        keyLength = keyLength + byte
+    end
+    local result = ""
+    
+    for i, byte in ipairs(bytes) do
+        result = result + string.char(byte + keyLength)
+    end
+    return result
+end
+
+function decrypt(text: string, key: string): string
+    local bytes = string.toBytes(text)
+    local keyBytes = string.toBytes(key)
+    local keyLength = len(keyBytes)
+    for i, byte in ipairs(keyBytes) do
+        keyLength = keyLength + byte
+    end
+    local result = ""
+    
+    for i, byte in ipairs(bytes) do
+        result = result + string.char(byte - keyLength)
+    end
+
+    return result
+end
+local original_text = "
+секрет текст
+"
+local encryption_key = "KEY"
+
+local encrypted = encrypt(original_text, encryption_key)
+print("\nЗашифрованные байты:", encrypted)
+
+local decrypted = decrypt(encrypted, encryption_key)
+print("\nРасшифрованный текст:", decrypted)

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Xylo IDE</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+            width: 90%;
+            margin: 0 auto;
+        }
+
+        .code-editor-container {
+            flex: 2;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+        }
+
+        .output-container {
+            flex: 1;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            overflow: auto;
+            height: 400px;
+        }
+
+        h3 {
+            margin-top: 0;
+            color: #555;
+        }
+
+        textarea {
+            width: 100%;
+            height: 400px;
+            font-family: monospace;
+            font-size: 14px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            resize: vertical;
+            outline: none;
+            background-color: #f9f9f9;
+            color: #222;
+            line-height: 1.5;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #3e8e41;
+        }
+
+        #output {
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            padding: 5px;
+        }
+
+        body {
+            background-color: #282c34;
+            color: #abb2bf;
+        }
+        .code-editor-container, .output-container {
+            background-color: #3e4451;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+        h3 {
+            color: #abb2bf;
+        }
+        textarea {
+            background-color: #282c34;
+            border-color: #5c6370;
+            color: #abb2bf;
+        }
+        button {
+            background-color: #61afef;
+        }
+        button:hover {
+            background-color: #569cd6;
+        }
+
+        .controls {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="code-editor-container">
+            <h3>Xylo Code:</h3>
+            <textarea id="code"></textarea>
+            <div class="controls">
+                <button id="Run">Run</button>
+            </div>
+        </div>
+        <div class="output-container">
+            <h3>Output:</h3>
+            <div id="output"></div>
+        </div>
+    </div>
+    <canvas id="myCanvas"></canvas>
+
+    <script type="module">
+        import {runXylo} from "/xylo/init.js";
+
+        const codeTextArea = document.getElementById("code");
+        codeTextArea.innerText = 'require("main")'
+        const outputDiv = document.getElementById("output");
+        const modeSelect = document.getElementById("mode");
+
+        codeTextArea.addEventListener('keydown', function(e) {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const start = this.selectionStart;
+                const end = this.selectionEnd;
+
+                this.value = this.value.substring(0, start) +
+                "    " + this.value.substring(end);
+
+                this.selectionStart = this.selectionEnd = start + 4;
+            }
+        });
+
+        const originalConsoleLog = console.log;
+        const originalConsoleError = console.error;
+        const originalConsoleWarn = console.warn;
+
+        console.log = function() {
+            let message = Array.from(arguments).map(arg => {
+                if (typeof arg === 'object' && arg !== null) {
+                    try {
+                        return JSON.stringify(arg, null, 2);
+                    } catch (e) {
+                        return String(arg);
+                    }
+                } else if (arg instanceof Promise) {
+                    return new Promise((resolve, reject) => {
+                        arg.then(value => {
+                            try {
+                                resolve("Promise resolved: " + JSON.stringify(value, null, 2));
+                            } catch (e) {
+                                resolve("Promise resolved: " + String(value));
+                            }
+                        }).catch(error => {
+                            resolve("Promise rejected: " + String(error));
+                        });
+                    });
+                } else {
+                    return String(arg);
+                }
+            });
+
+            Promise.all(message).then(messages => {
+                outputDiv.textContent += messages.join(' ') + '\n';
+                originalConsoleLog.apply(console, arguments);
+            });
+        };
+
+        console.error = function() {
+            let message = Array.from(arguments).map(arg => String(arg));
+            outputDiv.textContent += 'ERROR: ' + message.join(' ') + '\n';
+            originalConsoleError.apply(console, arguments);
+        };
+
+        console.warn = function() {
+            let message = Array.from(arguments).map(arg => String(arg));
+            outputDiv.textContent += 'WARNING: ' + message.join(' ') + '\n';
+            originalConsoleWarn.apply(console, arguments);
+        };
+
+        window.onerror = function(message, source, lineno, colno, error) {
+            console.error(`Uncaught error: ${message} at ${source}:${lineno}:${colno}`);
+            return true;
+        };
+
+        window.onunhandledrejection = function(event) {
+            console.error(`Unhandled promise rejection: ${event.reason}`);
+        };
+
+        document.getElementById("Run").addEventListener('click', async () => {
+            outputDiv.textContent = "";
+            const code = document.getElementById('code').value;
+
+            let result;
+            result = await runXylo(code);
+
+            if (result !== undefined && result !== null) {
+                console.log(result);
+            }
+        });
+    </script>
+</body>
+</html>
