@@ -55,4 +55,16 @@ function runXylo(code, modulePath) {
     }
 }
 
+const style = document.createElement('style');
+style.textContent = 'xylo-script { display: none; }';
+document.head.appendChild(style);
+class XyloElement extends HTMLElement {
+    constructor() {
+        super();
+        const code = this.textContent.trim();
+        runXylo(code);
+    }
+}
+customElements.define('xylo-script', XyloElement);
+
 export { runXylo };

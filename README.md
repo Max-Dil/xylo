@@ -31,6 +31,10 @@ print("Hello, world!")
     <title>Document</title>
 </head>
 <body>
+    <xylo-script>
+        print('Test xylo-script')
+    </xylo-script>
+
     <script type="module">
         import {runXylo} from "/xylo.js";
 
