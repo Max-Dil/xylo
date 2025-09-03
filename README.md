@@ -36,3 +36,12 @@ print("Hello, world!")
 </body>
 </html>
 ```
+
+# Documentation:
+https://nesworld.ru/xylo
+
+# Online code runner:
+https://nesworld.ru/xyloonline
+
+# Tools:
+https://nesworld.ru/xylotools
